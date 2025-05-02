@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.ProBuilder;
+using UnityEngine.ProBuilder.MeshOperations;
 
 public class DrawMesh : MonoBehaviour
 {
-    public GameObject leftPoint;
+    public GameObject leftArm;
+    public GameObject rightArm;
     //rightPoint;
 
     GameObject drawing;
@@ -247,23 +250,27 @@ public class DrawMesh : MonoBehaviour
 
         StopAllCoroutines();
         ReDraw();
+        CalculateNormals();
 
         Mesh mesh = drawing.GetComponent<MeshFilter>().mesh;
 
-        Mesh leftPointMesh = new Mesh();
-        leftPointMesh.vertices = mesh.vertices;
-        leftPointMesh.triangles = mesh.triangles;
+        Mesh leftArmMesh = new Mesh();
+        leftArmMesh.vertices = mesh.vertices;
+        leftArmMesh.triangles = mesh.triangles;
+        leftArmMesh.normals = mesh.normals;
 
-        Mesh rightPointMesh = new Mesh();
-        rightPointMesh.vertices = mesh.vertices;
-        rightPointMesh.triangles = mesh.triangles;
-        rightPointMesh.RecalculateNormals();
+        Mesh rightArmMesh = new Mesh();
+        rightArmMesh.vertices = mesh.vertices;
+        rightArmMesh.triangles = mesh.triangles;
+        leftArmMesh.normals = mesh.normals;
 
-        leftPoint.GetComponent<MeshFilter>().mesh = leftPointMesh;
-      //  rightPoint.GetComponent<MeshFilter>().mesh = rightPointMesh;
+        leftArm.GetComponent<MeshFilter>().mesh = leftArmMesh;
+        rightArm.GetComponent<MeshFilter>().mesh = rightArmMesh;
 
-        leftPoint.GetComponent<MeshCollider>().sharedMesh = leftPointMesh;
-        //rightPoint.GetComponent<MeshCollider>().sharedMesh = rightPointMesh;
+        leftArm.GetComponent<MeshCollider>().sharedMesh = leftArmMesh;
+        rightArm.GetComponent<MeshCollider>().sharedMesh = rightArmMesh;
+
+
 
         Destroy(drawing);
     }
@@ -273,11 +280,11 @@ public class DrawMesh : MonoBehaviour
         Mesh mesh = drawing.GetComponent<MeshFilter>().mesh;
         Vector3[] vertices = mesh.vertices;
 
-       int[] triangles = mesh.triangles;
-        
+        int[] triangles = mesh.triangles;
+
 
         //redraw
-        for (int i = 1; i < vertices.Length;i++)
+        for (int i = 1; i < vertices.Length; i++)
         {
             vertices[i] = new Vector3(vertices[i].x + (vertices[0].x * -1),
                 vertices[i].y + (vertices[0].y * -1),
@@ -289,6 +296,19 @@ public class DrawMesh : MonoBehaviour
         vertices[0] = Vector3.zero;
         mesh.vertices = vertices;
         mesh.triangles = triangles;
+    }
+
+    private void CalculateNormals()
+    {
+        new MeshImporter(drawing).Import(); // adds probuilder mesh filter to object
+
+        ProBuilderMesh proMesh = drawing.GetComponent<ProBuilderMesh>();
+
+        Normals.CalculateNormals(proMesh);
+
+        proMesh.ToMesh();
+        proMesh.Refresh();
+
     }
 }
 
